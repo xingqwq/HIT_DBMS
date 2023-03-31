@@ -48,12 +48,13 @@ class BlogManager:
     def insertUser(self, name, phoneNum):
         if len(name) >= 10:
             print("error name")
-            return False
+            return False,"error name"
         
         if phoneNum.isdigit() == False:
             print("error phoneNum")
-            return False
+            return False,"error phoneNum"
         
+        flag = 0
         try:
             sql = "INSERT INTO `user` (`名称`, `联系方式`) VALUES ('{}', '{}')".format(name, phoneNum)
             self.printSQL(sql)
@@ -61,13 +62,19 @@ class BlogManager:
             cur.execute(sql)
             self.dbms.db.commit()
             print("执行成功\n")
+            flag = 1
         except Exception as e:
             print("执行失败")
             if "Duplicate entry" in repr(e):
+                msg = "[唯一性约束] 当前新加入元组存在重复"
                 print("[唯一性约束] 当前新加入元组存在重复")
             self.dbms.db.rollback()
         finally:
             cur.close()
+            if flag == 1:
+                return (True, "succ")
+            else:
+                return (False,msg)
         
     def insertCreation(self, plateID, name, text):
         try:
@@ -219,9 +226,9 @@ class BlogManager:
             cur.close()
         
         if flag:
-            return (True, "succ")
+            return True,"SUCC"
         else:
-            return (False,msg)
+            return False,msg
             
     def comDoc(self, userID, docID, date, like):
         try:
@@ -252,6 +259,7 @@ class BlogManager:
             print("执行成功\n")
             print("[成功出发删除前触发器]已同步删除用户参与活动记录和用户评论记录")
             flag = 1
+            msg = "[成功出发删除前触发器]已同步删除用户参与活动记录和用户评论记录"
         except Exception as e:
             print("执行失败",e)
             if "a foreign key constraint fails" in repr(e):
@@ -262,7 +270,7 @@ class BlogManager:
             cur.close()
 
         if flag:
-            return True,"[成功出发删除前触发器]已同步删除用户参与活动记录和用户评论记录"
+            return True,msg
         else:
             return False,msg
     
@@ -277,6 +285,7 @@ class BlogManager:
             print("执行成功\n")
             print("[成功出发删除前触发器]已同步删除其他表项中的该文章记录")
             flag = 1
+            msg = "[成功出发删除前触发器]已同步删除其他表项中的该文章记录"
         except Exception as e:
             print("执行失败",e)
             if "a foreign key constraint fails" in repr(e):
@@ -287,72 +296,103 @@ class BlogManager:
             cur.close()
         
         if flag:
-            return True,"[成功出发删除前触发器]已同步删除其他表项中的该文章记录"
+            return True,msg
         else:
             return False,msg
     
     def getPlatePerInfo(self):
+        flag = 0
         try:
             cur = self.dbms.newCur()
             sql = "select * from plate_info"
             self.printSQL(sql)
             cur.execute(sql)
-            self.printData("板块与板块负责人联系表",cur.fetchall())
+            msg = ("板块与板块负责人联系表",cur.fetchall())
             print("执行成功\n")
+            flag = 1
         except Exception as e:
             print("执行失败",e)
         finally:
             cur.close()
+        
+        if flag:
+            return True,msg
+        else:
+            return False,msg
     
     def getUserCom(self):
+        flag = 0
         try:
             cur = self.dbms.newCur()
             sql = "select * from user_com"
             self.printSQL(sql)
             cur.execute(sql)
-            self.printData("用户评论列表",cur.fetchall())
+            msg = ("用户评论列表",cur.fetchall())
             print("执行成功\n")
+            flag = 1
         except Exception as e:
             print("执行失败",e)
+            msg = repr(e)
         finally:
             cur.close()
+        
+        if flag:
+            return True,msg
+        else:
+            return False,msg
     
     def getUserDoC(self, userID, status):
+        flag = 0
         try:
             cur = self.dbms.newCur()
             sql = "select in_user.文章名, in_user.评论时间 from (select * from user_com where 情绪 = '{}') as in_user where 用户编号 = '{}'".format(status,userID)
             self.printSQL(sql)
             cur.execute(sql)
-            self.printData("用户编号为 {} {}的文章列表".format(userID, status),cur.fetchall())
+            msg = ("用户编号为 {} {}的文章列表".format(userID, status),cur.fetchall())
             print("执行成功\n")
+            flag = 1
         except Exception as e:
             print("执行失败",e)
+            msg = repr(e)
         finally:
             cur.close()
+        
+        if flag:
+            return True,msg
+        else:
+            return False,msg
     
     def getDocCount(self, docID):
+        flag = 0
         try:
             cur = self.dbms.newCur()
             sql = "select in_user.文章名, in_user.情绪, count(*) from (select * from user_com where 文章编号 = '{}') as in_user group by in_user.情绪".format(docID)
             self.printSQL(sql)
             cur.execute(sql)
-            self.printData("文章编号为 {} 的情绪分布".format(docID),cur.fetchall())
+            msg = ("文章编号为 {} 的情绪分布".format(docID),cur.fetchall())
             print("执行成功\n")
+            flag = 1
         except Exception as e:
             print("执行失败",e)
+            msg = repr(e)
         finally:
             cur.close()
+        
+        if flag:
+            return True,msg
+        else:
+            return False,msg
 
-# 博客数据库管理
-blogDB = BlogManager()
+# # 博客数据库管理
+# blogDB = BlogManager()
 
-# 创建视图, 查看数据
-blogDB.getPlatePerInfo()
-blogDB.getUserCom()
+# # 创建视图, 查看数据
+# blogDB.getPlatePerInfo()
+# blogDB.getUserCom()
 
-# 插入操作（体现完整性约束、事务管理）
-blogDB.insertPage("DBMS实验二要验收啦！","./xingqwq",[6,4], 100, 3, "2023-03-05")
-blogDB.insertCreation("8","BigData","数据库管理系统")   
+# # 插入操作（体现完整性约束、事务管理）
+# blogDB.insertPage("DBMS实验二要验收啦！","./xingqwq",[6,4], 100, 3, "2023-03-05")
+# blogDB.insertCreation("8","BigData","数据库管理系统")   
 
 # # 删除操作（体现完整性约束、触发器）
 # blogDB.deleteUser("6")
