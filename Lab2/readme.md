@@ -27,3 +27,24 @@
     **板块编号**，**创作组编号**、**文章编号**、发布时间
 7. 文章和话题组成“参与话题”联系，属于m:n联系
     **文章编号**、**话题编号**、发布时间
+
+### 触发器
+删除用户：
+```sql
+DROP TRIGGER IF EXISTS delete_user;
+DELIMITER //
+CREATE TRIGGER delete_user BEFORE DELETE
+ON user FOR EACH ROW
+begin       
+    DELETE FROM join_acti WHERE 用户编号t = old.用户编号;
+end//
+DELIMITER ;
+```
+
+### 创建视图
+```sql
+CREATE VIEW user_com AS
+SELECT com_doc.评论时间,user.用户编号, user.名称 as 用户昵称,doc.文章编号,doc.名称 as 文章名 ,com_doc.情绪
+FROM user,com_doc,doc
+WHERE user.用户编号 = com_doc.用户编号t AND doc.文章编号 = com_doc.文章编号t
+```

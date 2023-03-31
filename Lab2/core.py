@@ -60,25 +60,11 @@ class BlogManager:
             cur = self.dbms.newCur()
             cur.execute(sql)
             self.dbms.db.commit()
-            print("执行成功")
+            print("执行成功\n")
         except Exception as e:
             print("执行失败")
             if "Duplicate entry" in repr(e):
                 print("[唯一性约束] 当前新加入元组存在重复")
-            self.dbms.db.rollback()
-        finally:
-            cur.close()
-    
-    def insertPage(self, name, doc):
-        try:
-            sql = "INSERT INTO `doc` (`名称`, `存储地址`) VALUES ('{}', '{}')".format(name, doc)
-            self.printSQL(sql)
-            cur = self.dbms.newCur()
-            cur.execute(sql)
-            self.dbms.db.commit()
-            print("执行成功")
-        except Exception as e:
-            print("执行失败")
             self.dbms.db.rollback()
         finally:
             cur.close()
@@ -90,7 +76,7 @@ class BlogManager:
             cur = self.dbms.newCur()
             cur.execute(sql)
             self.dbms.db.commit()
-            print("执行成功")
+            print("执行成功\n")
         except Exception as e:
             print("执行失败")
             if "a foreign key constraint fails" in repr(e):
@@ -108,7 +94,7 @@ class BlogManager:
             cur = self.dbms.newCur()
             cur.execute(sql)
             self.dbms.db.commit()
-            print("执行成功")
+            print("执行成功\n")
         except Exception as e:
             print("执行失败")
             if "Duplicate entry" in repr(e):
@@ -132,7 +118,7 @@ class BlogManager:
             self.printSQL(sql)
             cur.execute(sql)
             self.dbms.db.commit()
-            print("执行成功")
+            print("执行成功\n")
         except Exception as e:
             print("执行失败")
             if "a foreign key constraint fails" in repr(e):
@@ -153,7 +139,7 @@ class BlogManager:
             self.printSQL(sql)
             cur.execute(sql)
             self.dbms.db.commit()
-            print("执行成功")
+            print("执行成功\n")
         except Exception as e:
             print("执行失败")
             if "Duplicate entry" in repr(e):
@@ -169,7 +155,7 @@ class BlogManager:
             self.printSQL(sql)
             cur.execute(sql)
             self.dbms.db.commit()
-            print("执行成功")
+            print("执行成功\n")
         except Exception as e:
             print("执行失败")
             if "a foreign key constraint fails" in repr(e):
@@ -187,7 +173,7 @@ class BlogManager:
             self.printSQL(sql)
             cur.execute(sql)
             self.dbms.db.commit()
-            print("执行成功")
+            print("执行成功\n")
         except Exception as e:
             print("执行失败")
             if "a foreign key constraint fails" in repr(e):
@@ -198,16 +184,28 @@ class BlogManager:
         finally:
             cur.close()
     
-    def joinTopic(self, docID, topicID, date):
+    def insertPage(self, name, doc, topicList, plateID, creationID, date):
         try:
-            cur = self.dbms.newCur()
-            sql = "INSERT INTO `join_topic` (`文章编号t`, `话题编号t`, `发布时间`) VALUES ('{}', '{}','{}')".format(docID, topicID, date)
+            # 新建文章
+            sql = "INSERT INTO `doc` (`名称`, `存储地址`) VALUES ('{}', '{}');".format(name, doc)
             self.printSQL(sql)
+            cur = self.dbms.newCur()
             cur.execute(sql)
+            cur.execute("SELECT LAST_INSERT_ID();")
+            docID = cur.fetchone()[0]
+            # 添加话题
+            for i in topicList:
+                sql = "INSERT INTO `join_topic` (`文章编号t`, `话题编号t`, `发布时间`) VALUES ('{}', '{}','{}')".format(docID, i, date)
+                self.printSQL(sql)
+                cur.execute(sql)
+            # 创作组发布文章联系
+            sql = "INSERT INTO `pub_doc` (`板块编号t`, `创作组编号t`, `文章编号t`, `发表时间`) VALUES ('{}', '{}', '{}', '{}');".format(plateID, creationID, docID, date)
+            cur.execute(sql)
+            self.printSQL(sql)
             self.dbms.db.commit()
-            print("执行成功")
+            print("执行成功\n")
         except Exception as e:
-            print("执行失败",e)
+            print("执行失败")
             if "a foreign key constraint fails" in repr(e):
                 print("[外键错误] 当前文章/话题编号不存在")
             if "Duplicate entry" in repr(e):
@@ -215,15 +213,136 @@ class BlogManager:
             self.dbms.db.rollback()
         finally:
             cur.close()
+            
+    def comDoc(self, userID, docID, date, like):
+        try:
+            cur = self.dbms.newCur()
+            sql = "INSERT INTO `com_doc` (`用户编号t`, `文章编号t`, `评论时间`, `情绪`) VALUES ('{}', '{}','{}','{}')".format(userID, docID, date, like)
+            self.printSQL(sql)
+            cur.execute(sql)
+            self.dbms.db.commit()
+            print("执行成功\n")
+        except Exception as e:
+            print("执行失败")
+            if "a foreign key constraint fails" in repr(e):
+                print("[外键错误] 当前用户/文章编号不存在")
+            if "Duplicate entry" in repr(e):
+                print("[唯一性约束] 当前新加入元组存在重复")
+            self.dbms.db.rollback()
+        finally:
+            cur.close()
+            
+    def deleteUser(self, userID):
+        try:
+            cur = self.dbms.newCur()
+            sql = "delete from user where 用户编号 = '{}'".format(userID)
+            self.printSQL(sql)
+            cur.execute(sql)
+            self.dbms.db.commit()
+            print("执行成功\n")
+            print("[成功出发删除前触发器]已同步删除用户参与活动记录和用户评论记录")
+        except Exception as e:
+            print("执行失败",e)
+            if "a foreign key constraint fails" in repr(e):
+                print("[外键错误] 当前文章/话题编号不存在")
+            self.dbms.db.rollback()
+        finally:
+            cur.close()
+    
+    def deletePage(self, docID):
+        try:
+            cur = self.dbms.newCur()
+            sql = "delete from doc where 文章编号 = '{}'".format(docID)
+            self.printSQL(sql)
+            cur.execute(sql)
+            self.dbms.db.commit()
+            print("执行成功\n")
+            print("[成功出发删除前触发器]已同步删除其他表项中的该文章记录")
+        except Exception as e:
+            print("执行失败",e)
+            if "a foreign key constraint fails" in repr(e):
+                print("[外键错误] 无法删除")
+            self.dbms.db.rollback()
+        finally:
+            cur.close()
+    
+    def getPlatePerInfo(self):
+        try:
+            cur = self.dbms.newCur()
+            sql = "select * from plate_info"
+            self.printSQL(sql)
+            cur.execute(sql)
+            self.printData("板块与板块负责人联系表",cur.fetchall())
+            print("执行成功\n")
+        except Exception as e:
+            print("执行失败",e)
+        finally:
+            cur.close()
+    
+    def getUserCom(self):
+        try:
+            cur = self.dbms.newCur()
+            sql = "select * from user_com"
+            self.printSQL(sql)
+            cur.execute(sql)
+            self.printData("板块与板块负责人联系表",cur.fetchall())
+            print("执行成功\n")
+        except Exception as e:
+            print("执行失败",e)
+        finally:
+            cur.close()
+    
+    def getUserDoC(self, userID, status):
+        try:
+            cur = self.dbms.newCur()
+            sql = "select in_user.文章名, in_user.评论时间 from (select * from user_com where 情绪 = '{}') as in_user where 用户编号 = '{}'".format(status,userID)
+            self.printSQL(sql)
+            cur.execute(sql)
+            self.printData("用户编号为 {} {}的文章列表".format(userID, status),cur.fetchall())
+            print("执行成功\n")
+        except Exception as e:
+            print("执行失败",e)
+        finally:
+            cur.close()
+    
+    def getDocCount(self, docID):
+        try:
+            cur = self.dbms.newCur()
+            sql = "select in_user.文章名, in_user.情绪, count(*) from (select * from user_com where 文章编号 = '{}') as in_user group by in_user.情绪".format(docID)
+            self.printSQL(sql)
+            cur.execute(sql)
+            self.printData("文章编号为 {} 的情绪分布".format(docID),cur.fetchall())
+            print("执行成功\n")
+        except Exception as e:
+            print("执行失败",e)
+        finally:
+            cur.close()
+
+    
     
 blogDB = BlogManager()
-blogDB.showDatabase("acti")
+# blogDB.showDatabase("acti")
 # blogDB.insertPlate("微积分", "微积分（Calculus），数学概念，是高等数学中研究函数的微分（Differentiation）、积分（Integration）以及有关概念和应用的数学分支。它是数学的一个基础学科，内容主要包括极限、微分学、积分学及其应用。")
 # blogDB.insertCreationPer("450009199812134567", "周一宁", "12793456523", "8", "2020-03-20", "2035-03-19")
-# blogDB.insertUser("xingqwq","19872553809")
+# blogDB.insertUser("玉院士","19872553809")
 # blogDB.insertCreation("8","DBMS","数据库管理系统")            
-# blogDB.insertPage("ChatGPT4最新综述","./xingqwq")
+# blogDB.insertPage("ChatGPT4可以联网计算数学","./xingqwq",[6,4], 100, 3, "2023-03-05")
 # blogDB.insertPlatePer("238880200212180387", "王笑笑", "12793456523")
 # blogDB.insertPlateMa("238880200212180387", "3","2020-03-20", "2035-03-19")
-blogDB.joinActi("6","3","2022-06-19")
-blogDB.joinTopic("4", "6","2022-06-19") 
+# blogDB.joinActi("22","3","2022-06-19")
+# blogDB.comDoc("22", "4", "2023-03-27", "SUB")
+# blogDB.comDoc("22", "1", "2023-03-27", "NO LIKE")
+# blogDB.comDoc("22", "2", "2023-03-27", "HATE")
+# blogDB.comDoc("5", "4", "2023-03-27", "SUB")
+# blogDB.comDoc("1", "3", "2023-03-27", "HATE")
+# blogDB.comDoc("4", "3", "2023-03-22", "LIKE")
+# blogDB.comDoc("12", "3", "2023-03-29", "HATE")
+# blogDB.joinTopic("4", "6","2022-06-19") 
+# blogDB.deleteUser("6")
+
+# blogDB.getPlatePerInfo()
+# blogDB.getUserCom()
+blogDB.getUserDoC(3, "HATE")
+blogDB.getDocCount(3)
+# blogDB.deletePage(2)
+# blogDB.getUserDoC(22, "HATE")
