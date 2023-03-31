@@ -285,7 +285,7 @@ class BlogManager:
             sql = "select * from user_com"
             self.printSQL(sql)
             cur.execute(sql)
-            self.printData("板块与板块负责人联系表",cur.fetchall())
+            self.printData("用户评论列表",cur.fetchall())
             print("执行成功\n")
         except Exception as e:
             print("执行失败",e)
@@ -318,9 +318,28 @@ class BlogManager:
         finally:
             cur.close()
 
-    
-    
+# 博客数据库管理
 blogDB = BlogManager()
+
+# 创建视图, 查看数据
+blogDB.getPlatePerInfo()
+blogDB.getUserCom()
+
+# 插入操作（体现完整性约束、事务管理）
+# blogDB.insertPage("DBMS实验二要验收啦！","./xingqwq",[6,4], 3, 3, "2023-03-05")
+blogDB.insertCreation("8","DBMS","数据库管理系统")   
+
+# # 删除操作（体现完整性约束、触发器）
+# blogDB.deleteUser("6")
+# blogDB.deletePage(2)
+
+# # 嵌套查询（查看某用户评论文章的列表）
+# blogDB.getUserDoC(5, "SUB")
+
+# # 分组查询（获取某篇文章各个情绪的分布）
+# blogDB.getDocCount(7)
+
+
 # blogDB.showDatabase("acti")
 # blogDB.insertPlate("微积分", "微积分（Calculus），数学概念，是高等数学中研究函数的微分（Differentiation）、积分（Integration）以及有关概念和应用的数学分支。它是数学的一个基础学科，内容主要包括极限、微分学、积分学及其应用。")
 # blogDB.insertCreationPer("450009199812134567", "周一宁", "12793456523", "8", "2020-03-20", "2035-03-19")
@@ -329,20 +348,28 @@ blogDB = BlogManager()
 # blogDB.insertPage("ChatGPT4可以联网计算数学","./xingqwq",[6,4], 100, 3, "2023-03-05")
 # blogDB.insertPlatePer("238880200212180387", "王笑笑", "12793456523")
 # blogDB.insertPlateMa("238880200212180387", "3","2020-03-20", "2035-03-19")
-# blogDB.joinActi("22","3","2022-06-19")
-# blogDB.comDoc("22", "4", "2023-03-27", "SUB")
-# blogDB.comDoc("22", "1", "2023-03-27", "NO LIKE")
-# blogDB.comDoc("22", "2", "2023-03-27", "HATE")
-# blogDB.comDoc("5", "4", "2023-03-27", "SUB")
-# blogDB.comDoc("1", "3", "2023-03-27", "HATE")
-# blogDB.comDoc("4", "3", "2023-03-22", "LIKE")
-# blogDB.comDoc("12", "3", "2023-03-29", "HATE")
+# blogDB.joinActi("22","7","2022-06-19")
+# blogDB.comDoc("22", "8", "2023-03-27", "SUB")
+# blogDB.comDoc("22", "9", "2023-03-27", "NO LIKE")
+# blogDB.comDoc("22", "10", "2023-03-27", "HATE")
+# blogDB.comDoc("5", "7", "2023-03-27", "SUB")
+# blogDB.comDoc("5", "8", "2023-03-27", "LIKE")
+# blogDB.comDoc("5", "9", "2023-03-27", "SUB")
+# blogDB.comDoc("5", "10", "2023-03-27", "SUB")
+# blogDB.comDoc("1", "7", "2023-03-27", "HATE")
+# blogDB.comDoc("3", "7", "2023-03-27", "LIKE")
+# blogDB.comDoc("4", "8", "2023-03-22", "NO LIKE")
+# blogDB.comDoc("12", "9", "2023-03-29", "HATE")
+# blogDB.comDoc("12", "8", "2023-03-29", "HATE")
+# blogDB.comDoc("12", "7", "2023-03-29", "LIKE")
+# blogDB.comDoc("12", "10", "2023-03-29", "HATE")
+# blogDB.comDoc("12", "17", "2023-03-29", "LIKE")
 # blogDB.joinTopic("4", "6","2022-06-19") 
 # blogDB.deleteUser("6")
 
 # blogDB.getPlatePerInfo()
 # blogDB.getUserCom()
-blogDB.getUserDoC(3, "HATE")
-blogDB.getDocCount(3)
+# blogDB.getUserDoC(3, "HATE")
+# blogDB.getDocCount(3)
 # blogDB.deletePage(2)
 # blogDB.getUserDoC(22, "HATE")
