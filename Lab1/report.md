@@ -234,10 +234,12 @@ where sums.dno=sumh.dno;
 select ename, avgsalary from 
 (select ename, salary/sum(hours) as avgsalary, dno, employee.essn
  from works_on join employee on works_on.essn = employee.essn
+ where hours > 0
  group by employee.essn) as tmp_employee
 where exists(
     select pno from works_on 
-    where works_on.essn = tmp_employee.essn and pno not in (select pno from project where project.dno = tmp_employee.dno)
+    where works_on.essn = tmp_employee.essn and 
+    pno not in (select pno from project where project.dno = tmp_employee.dno)
 );
 ```
 ![task_10](img/13.png)
@@ -249,6 +251,7 @@ where exists(
 select * from 
 (select ename, salary/sum(hours) as avgsalary
  from works_on join employee on works_on.essn = employee.essn
+ where hours > 0
  group by employee.essn) as tmp_employee
 where avgsalary > 1000;
 ```
