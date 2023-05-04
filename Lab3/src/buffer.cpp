@@ -151,6 +151,7 @@ namespace badgerdb
         try
         {
             hashTable->lookup(file, pageNo, id);
+            // std::cout<<file->filename()<<" "<<pageNo<<" "<<bufDescTable[id].pinCnt<<std::endl;
             if (bufDescTable[id].pinCnt == 0)
             {
                 throw PageNotPinnedException(file->filename(), pageNo, id);
@@ -163,7 +164,6 @@ namespace badgerdb
         }
         catch (HashNotFoundException e)
         {
-            std::cerr << e.what() << '\n';
         }
     }
 
@@ -212,6 +212,7 @@ namespace badgerdb
         bufPool[id] = file->allocatePage();
         pageNo = bufPool[id].page_number();
         hashTable->insert(file, pageNo, id);
+        // std::cout<<file->filename()<<" "<<pageNo<<std::endl;
         bufDescTable[id].Set(file, pageNo);
         page = &bufPool[id];
     }
